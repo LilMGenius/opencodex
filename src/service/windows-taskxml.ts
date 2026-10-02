@@ -55,6 +55,10 @@ function taskXmlRunLevelAcceptable(principal: string): boolean {
   return value === "leastprivilege" || value === "highestavailable";
 }
 
+/**
+ * Batch wrapper the scheduled task runs: restarts the proxy on exit, restores a transactional-update
+ * backup when the install is gone, and waits while bundled Bun is still npm's placeholder.
+ */
 export function buildWindowsServiceScript(
   entry = cliEntry(),
   port = resolveServiceListenPort(),
