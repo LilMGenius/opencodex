@@ -285,7 +285,44 @@ test.skipIf(process.platform !== "win32")("cmd waits out the npm Bun placeholder
     expect(result.error).toBeUndefined();
     const output = readFileSync(log, "utf8");
     expect(output).not.toContain("PLACEHOLDER-EXECUTED");
-    expect(output).toContain("npm placeholder; waiting for its postinstall");
+    expect(output).toContain("bundled Bun is not ready (");
+    expect(output).toContain("FAKE-CHILD-STARTED");
+    expect(result.status).toBe(0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test.skipIf(process.platform !== "win32")("cmd waits when Bun disappears between the exist check and the size read", async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { spawnSync } = await import("node:child_process");
+  const { buildWindowsServiceScript } = await import("../../src/service/windows-taskxml");
+  const dir = mkdtempSync(join(tmpdir(), "ocx-wrapper-vanish-"));
+  try {
+    const pkg = join(dir, "package");
+    const bun = join(pkg, "bun.cmd");
+    const cli = join(pkg, "src", "cli", "index.ts");
+    const log = join(dir, "service.log");
+    mkdirSync(join(pkg, "src", "cli"), { recursive: true });
+    writeFileSync(cli, "fixture");
+    writeFileSync(`${bun}.real`, '@echo off\r\necho FAKE-CHILD-STARTED\r\nexit /b 42\r\n' + "rem pad past the real-Bun size gate\r\n".repeat(40_000));
+    const batch = buildWindowsServiceScript({ bun, bunRuntimeSource: "bundled", cli }, 10100, []);
+    // Neutralise the Bun exist guards so the size read itself meets the missing file, as it
+    // does when npm removes the package between those two lines.
+    const body = batch.slice(batch.indexOf(":loop\r\n"))
+      .replace('if not exist "%OCX_BUN%" (', "if 1==0 (")
+      .replace('if not exist "%OCX_BUN%" goto bun_missing', "rem exist guard removed")
+      .replace(/^"%OCX_BUN%" /m, 'call "%OCX_BUN%" ')
+      .replaceAll("ping -n 6 127.0.0.1 >nul", 'if exist "%OCX_BUN%.real" move /y "%OCX_BUN%.real" "%OCX_BUN%" >nul');
+    const file = join(dir, "wrapper.cmd");
+    writeFileSync(file, ["@echo off", "setlocal EnableExtensions DisableDelayedExpansion", 'set "ERRORLEVEL="',
+      `set "OCX_BUN=${bun}"`, `set "OCX_CLI=${cli}"`, `set "OCX_PKG_DIR=${pkg}"`,
+      `set "OCX_SERVICE_LOG=${log}"`, 'set "OCX_API_TOKEN_FILE=fixture"', body].join("\r\n"));
+    const result = spawnSync("cmd.exe", ["/d", "/c", file], { timeout: 10000, encoding: "utf8", env: { ...process.env, ERRORLEVEL: "42" } });
+    expect(result.error).toBeUndefined();
+    const output = readFileSync(log, "utf8");
+    expect(output).toContain("bundled Bun is not ready ( bytes");
     expect(output).toContain("FAKE-CHILD-STARTED");
     expect(result.status).toBe(0);
   } finally {

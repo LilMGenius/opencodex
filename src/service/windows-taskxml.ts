@@ -107,7 +107,11 @@ export function buildWindowsServiceScript(
     // An in-place npm install extracts the bun package's tiny placeholder before its postinstall
     // swaps in the real binary. Executing it fails with exit 216 and, in an interactive session,
     // a modal "Unsupported 16-Bit Application" dialog that blocks this loop until dismissed.
+    // The install can also remove the file between the exist check and this read; an empty size
+    // would turn the comparison into a syntax error that ends the wrapper.
+    'set "OCX_BUN_BYTES="',
     'for %%F in ("%OCX_BUN%") do set "OCX_BUN_BYTES=%%~zF"',
+    'if not defined OCX_BUN_BYTES goto bun_not_ready',
     `if %OCX_BUN_BYTES% LSS ${REAL_BUN_MIN_BYTES} goto bun_not_ready`,
     cli ? 'if not exist "%OCX_CLI%" (' : null,
     cli ? "  call :restore_backup" : null,
@@ -125,7 +129,7 @@ export function buildWindowsServiceScript(
     "endlocal",
     "exit /b 0",
     ":bun_not_ready",
-    '>>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] bundled Bun is still the %OCX_BUN_BYTES%-byte npm placeholder; waiting for its postinstall, retrying in 5s',
+    '>>"%OCX_SERVICE_LOG%" echo [%DATE% %TIME%] bundled Bun is not ready (%OCX_BUN_BYTES% bytes, npm placeholder or mid-install); waiting for its postinstall, retrying in 5s - if this persists, reinstall opencodex with bun scripts allowed',
     "ping -n 6 127.0.0.1 >nul",
     "goto loop",
     ":bun_missing",
