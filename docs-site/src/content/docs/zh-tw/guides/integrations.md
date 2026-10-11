@@ -222,3 +222,9 @@ ocx integration client enable --client kilo
 ## Factory Droid
 
 Factory Droid 使用 `~/.factory/settings.json`（Windows 上為 `%USERPROFILE%\.factory\settings.json`）。使用 `ocx integration client enable --client droid` 明確啟用，然後在 `/model` 中選擇自訂模型。受管理的項目不含金鑰，且僅支援迴環連線。停用會移除受管理的項目；Undo 會還原儲存的原始位元組。如果舊版 `config.json` 含有 OpenCodex 項目，或 `settings.local.json` 覆寫了 `customModels`，請先解決衝突再啟用。請參閱 [Factory BYOK 文件](https://docs.factory.ai/model-independence/byok)。
+
+## omo (Codex / LazyCodex) 角色推理強度
+
+偵測到 LazyCodex 後，可在 omo 分頁編輯 `$CODEX_HOME/agents/*.toml` 中每個角色的模型與推理強度。所有角色的強度選擇器都提供 **繼承**，包括已固定強度的角色。選擇繼承並儲存，會移除角色 TOML 的根層級 `model_reasoning_effort`，並清除可安全重寫的 `~/.omo/omo.jsonc` 中的 `[codex].agents.<role>.reasoning`。模型固定保持不變，推理強度繼承 Codex 的父層設定。
+
+只變更模型的儲存會省略 `effort`，保留現有強度；繼承會傳送 `effort: null` 明確清除。鏡像寫入失敗時，**重試 omo.jsonc** 會重新傳送相同選擇，即使角色清單重新載入仍在等待或失敗，也會保留清除要求。套用 Auto-assign 中沒有強度建議的提案（例如強度清單為空的模型）也會保留角色現有強度。`omo.jsonc` 不存在或包含註解時會略過鏡像，角色 TOML 的儲存仍然保留。

@@ -320,8 +320,8 @@ the requested model id only; effort remains owned by the caps described under
 
 Codex overrides a child's spawn-time model with the root `model` key of
 `$CODEX_HOME/agents/<role>.toml`, so that pin decides which model a role runs on.
-`src/codex/agent-role-models.ts` is opencodex's only writer into those files, and it writes only
-that one key, only when a user picks a role's model in the dashboard's omo (Codex / LazyCodex)
+`src/codex/agent-role-models.ts` is opencodex's only writer into those files, and it edits only
+the root `model` and requested `model_reasoning_effort` keys when a user picks a role's model in the dashboard's omo (Codex / LazyCodex)
 section on the omo tab (`PUT /api/codex-agent-roles/{role}`) or with `ocx agent roles set`,
 and only while LazyCodex is detected. No sync, startup, or
 catalog path calls it, and opencodex never creates, repairs, or removes a role file.
@@ -344,6 +344,10 @@ catalog path calls it, and opencodex never creates, repairs, or removes a role f
 - The same pick is mirrored into LazyCodex's `[codex].agents.<role>` as `model` and, for an effort LazyCodex can express, `reasoning`; that half belongs to
   [client integrations](clients/integrations.md#omo-codex-lazycodex-role-models). The role file is written first
   and stands even when the mirror is skipped.
+- Omitted `effort` preserves the role's current effort. An explicit string sets the root
+  `model_reasoning_effort`; explicit `null` removes that root key and clears the mirror's
+  `reasoning`, restoring inheritance. The dashboard's Inherit option sends this clear even
+  for a pinned row, and its mirror retry preserves omission versus clear across failed reloads.
 
 Sibling instances refuse the write, because it reaches the shared `CODEX_HOME`.
 
@@ -378,6 +382,10 @@ the same refusal as the PUT. Applying a proposal is the ordinary
   `reasoningEfforts`; a row that declares none takes the ladder the written Codex catalog shows for it, an
   explicit empty list stays empty, and a row without its own default takes the catalog's default when that
   rung is on the ladder.
+
+`gui/src/pages/integrations/LazyCodexRoleAutoAssign.tsx` treats a proposal's null effort as no
+recommendation and omits it when applying. A model with an empty effort ladder therefore keeps
+the role's existing effort; explicit Inherit in the role picker is the clearing action.
 
 The sizing call is injectable (`completeCodexRoleSizing` on the management deps), so route tests answer it
 without a provider. Sibling instances refuse the preview too: it sits under the refused

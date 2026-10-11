@@ -50,8 +50,8 @@ beforeEach(() => {
     lazycodex: { detected: true, pluginEnabled: true, pluginInstalled: true },
     omoJsonc: { state: "present" },
     roles: [
-      { role: "explorer", model: "gpt-5.5", omoJsoncModel: null },
-      { role: "librarian", model: null, omoJsoncModel: null },
+      { role: "explorer", model: "gpt-5.5", effort: null, omoJsoncModel: null },
+      { role: "librarian", model: null, effort: null, omoJsoncModel: null },
     ],
   };
   const mockFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -61,7 +61,7 @@ beforeEach(() => {
       const body = JSON.parse(String(init.body));
       puts.push({ url, body });
       if (putFailure) return json(putFailure.body, putFailure.status);
-      if (body.effort !== undefined) {
+      if (Object.hasOwn(body, "effort") && body.effort !== null) {
         try {
           validateAgentRoleEffort(body.effort);
         } catch {
@@ -72,7 +72,9 @@ beforeEach(() => {
       const current = rolesBody as { roles: Array<{ role: string; model: string | null; effort?: string | null }> };
       rolesBody = {
         ...current,
-        roles: current.roles.map(row => row.role === role ? { ...row, model: body.model, effort: body.effort ?? row.effort ?? null } : row),
+        roles: current.roles.map(row => row.role === role ? {
+          ...row, model: body.model, effort: Object.hasOwn(body, "effort") ? body.effort : row.effort,
+        } : row),
       };
       return json({ ok: true, toml: { status: "written" }, omoJsonc: { status: omoWriteStatus } });
     }
@@ -127,6 +129,7 @@ async function pick(role: string, model: string, label = `Model for ${role}`): P
   const trigger = testWindow.document.querySelector(`[aria-label="${label}"]`) as unknown as HTMLButtonElement;
   await act(async () => { trigger.click(); });
   const option = [...testWindow.document.querySelectorAll('[role="option"]')].find(node => node.textContent === model) as unknown as HTMLElement;
+  expect(option).toBeDefined();
   await act(async () => { option.click(); });
 }
 
@@ -230,6 +233,61 @@ function pinExplorerEffort(effort: string): void {
     ...(rolesBody as object),
     roles: [{ role: "explorer", model: "gpt-5.5", effort, omoJsoncModel: null }],
   };
+}
+
+test("every role offers Inherit, including a pinned effort, and clearing sends explicit null", async () => {
+  rolesBody = {
+    ...(rolesBody as object),
+    roles: [
+      { role: "explorer", model: "gpt-5.5", effort: "high", omoJsoncModel: null },
+      { role: "librarian", model: "xai/grok-4.5", effort: null, omoJsoncModel: null },
+    ],
+  };
+  await mount();
+  await pick("librarian", "Inherit", "Reasoning effort (librarian)");
+  expect(saveButton("librarian").disabled).toBe(true);
+  await pick("explorer", "Inherit", "Reasoning effort (explorer)");
+  expect(saveButton("explorer").disabled).toBe(false);
+  await act(async () => { saveButton("explorer").click(); });
+  await settle();
+  expect(puts.map(entry => entry.body)).toEqual([{ model: "gpt-5.5", effort: null }]);
+  expect((rolesBody as { roles: Array<{ effort: string | null }> }).roles[0].effort).toBe(null);
+  expect(container.textContent).not.toContain("gpt-5.5 · high");
+  expect(saveButton("explorer").disabled).toBe(true);
+});
+
+for (const reload of ["successful", "pending", "failed"] as const) {
+  test(`clearing an effort retries the mirror with null after a ${reload} reload`, async () => {
+    pinExplorerEffort("future-provider-effort");
+    await mount();
+    omoWriteStatus = "write_failed";
+    let release = () => {};
+    if (reload === "pending") rolesHold = new Promise<void>(resolve => { release = resolve; });
+    if (reload === "failed") rolesFailure = { status: 500, body: { error: "unavailable" } };
+    await pick("explorer", "Inherit", "Reasoning effort (explorer)");
+    await act(async () => { saveButton("explorer").click(); });
+    await settle();
+    expect(puts.map(entry => entry.body)).toEqual([{ model: "gpt-5.5", effort: null }]);
+    expect((rolesBody as { roles: Array<{ effort: string | null }> }).roles[0].effort).toBe(null);
+    expect(saveButton("explorer").textContent).toBe("Retry omo.jsonc");
+    expect(saveButton("explorer").disabled).toBe(false);
+    if (reload === "failed") {
+      putFailure = { status: 500, body: { code: "write_failed" } };
+      await act(async () => { saveButton("explorer").click(); });
+      await settle();
+      expect(container.textContent).toContain("Could not save the model for explorer.");
+      expect(saveButton("explorer").textContent).toBe("Retry omo.jsonc");
+      putFailure = null;
+    }
+    omoWriteStatus = "written";
+    await act(async () => { saveButton("explorer").click(); });
+    await settle();
+    expect(puts.map(entry => entry.body)).toEqual(Array.from({ length: reload === "failed" ? 3 : 2 }, () => ({ model: "gpt-5.5", effort: null })));
+    rolesFailure = null;
+    await act(async () => { release(); });
+    await settle();
+    expect(saveButton("explorer").textContent).toBe("Save");
+  });
 }
 
 async function saveEffortWithFailedMirror(): Promise<void> {

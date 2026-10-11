@@ -264,3 +264,9 @@ GitHub Copilot デスクトップアプリでは、opencodex を OpenAI 互換�
 ## Factory Droid
 
 Factory Droid は `~/.factory/settings.json`（Windows では `%USERPROFILE%\.factory\settings.json`）を使用します。`ocx integration client enable --client droid` で明示的に有効化し、`/model` でカスタムモデルを選択します。管理対象の行はキーを使わず、ループバックでのみ動作します。無効化すると管理対象の行が削除され、Undo で保存済みのバイト列が復元されます。従来の `config.json` に OpenCodex の行がある場合や、`settings.local.json` が `customModels` を上書きする場合は、有効化する前に競合を解消してください。[Factory BYOK のドキュメント](https://docs.factory.ai/model-independence/byok)も参照してください。
+
+## omo (Codex / LazyCodex) のロール別推論強度
+
+LazyCodex が検出されると、omo タブで `$CODEX_HOME/agents/*.toml` の各ロールのモデルと推論強度を編集できます。強度が固定されたロールを含め、すべての強度選択に **継承** が表示されます。継承を選んで保存すると、ロール TOML のルート `model_reasoning_effort` と、安全に書き換えられる `~/.omo/omo.jsonc` の `[codex].agents.<role>.reasoning` が削除されます。モデルの固定は維持され、推論強度は Codex の親設定を継承します。
+
+モデルだけを変更する保存は `effort` を省略し、既存の強度を維持します。継承は `effort: null` を送り、明示的に解除します。ミラーの書き込みに失敗した場合、**omo.jsonc を再試行** は同じ選択を再送します。ロールの再読み込みが保留中や失敗でも解除を維持します。Auto-assign に強度の推奨がない提案（強度一覧が空のモデルなど）を適用しても、既存の強度は維持されます。`omo.jsonc` が存在しない場合やコメントがある場合はミラーをスキップし、ロール TOML の保存は維持します。

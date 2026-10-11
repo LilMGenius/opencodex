@@ -34,7 +34,7 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
   const t = useT();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [effortDrafts, setEffortDrafts] = useState<Record<string, string>>({});
-  const [mirrorRetries, setMirrorRetries] = useState<Record<string, { model: string; effort: string; sent: string | null }>>({});
+  const [mirrorRetries, setMirrorRetries] = useState<Record<string, { model: string; effort: string; sent: string | null | undefined }>>({});
   const [pending, setPending] = useState<string | null>(null);
   const [result, setResult] = useState<{ tone: "ok" | "warn" | "err"; text: string } | null>(null);
 
@@ -68,7 +68,12 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
   });
   const data = resource.state.data;
 
-  const save = async (role: string, model: string, effort: string | null = null, displayedEffort = effort ?? ""): Promise<boolean> => {
+  const save = async (
+    role: string,
+    model: string,
+    effort: string | null | undefined = undefined,
+    displayedEffort = effort === undefined ? data?.roles.find(row => row.role === role)?.effort ?? "" : effort ?? "",
+  ): Promise<boolean> => {
     if (pending !== null) return false;
     setPending(role);
     setResult(null);
@@ -76,7 +81,7 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
       const response = await fetch(`${apiBase}/api/codex-agent-roles/${encodeURIComponent(role)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(effort ? { model, effort } : { model }),
+        body: JSON.stringify({ model, effort }),
       });
       const payload = await readJsonOrThrow<{ omoJsonc?: { status?: OmoWriteStatus } }>(
         response,
@@ -174,7 +179,7 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
                         <Select
                           value={effortDraft}
                           options={[
-                            ...(row.effort === null ? [{ value: "", label: t("integrations.lazycodexRoles.effortDefault") }] : []),
+                            { value: "", label: t("integrations.lazycodexRoles.effortDefault") },
                             ...[...new Set([...(row.effort ? [row.effort] : []), ...data.efforts])].map(value => ({ value, label: value })),
                           ]}
                           label={t("integrations.lazycodexRoles.effortFor", { role: row.role })}
@@ -187,7 +192,7 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
                           disabled={!(changed || retryMirror) || pending !== null}
                           onClick={() => void (retryMirror
                             ? save(row.role, pendingMirror.model, pendingMirror.sent, pendingMirror.effort)
-                            : save(row.role, draft, effortChanged ? effortDraft || null : null, effortDraft))}
+                            : save(row.role, draft, effortChanged ? effortDraft || null : undefined, effortDraft))}
                         >
                           {pending === row.role
                             ? t("common.saving")

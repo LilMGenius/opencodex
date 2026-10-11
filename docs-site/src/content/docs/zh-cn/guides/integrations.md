@@ -262,3 +262,9 @@ GitHub Copilot 桌面应用可以将 opencodex 用作兼容 OpenAI 的模型提�
 ## Factory Droid
 
 Factory Droid 使用 `~/.factory/settings.json`（Windows 上为 `%USERPROFILE%\.factory\settings.json`）。使用 `ocx integration client enable --client droid` 明确启用，然后在 `/model` 中选择自定义模型。托管条目不含密钥，且仅支持回环连接。禁用会移除托管条目；Undo 会恢复保存的原始字节。如果旧版 `config.json` 含有 OpenCodex 条目，或 `settings.local.json` 覆盖了 `customModels`，请先解决冲突再启用。参见 [Factory BYOK 文档](https://docs.factory.ai/model-independence/byok)。
+
+## omo (Codex / LazyCodex) 角色推理强度
+
+检测到 LazyCodex 后，可以在 omo 标签页编辑 `$CODEX_HOME/agents/*.toml` 中每个角色的模型和推理强度。所有角色的强度选择器都提供 **继承**，包括已固定强度的角色。选择继承并保存，会移除角色 TOML 的根级 `model_reasoning_effort`，并清除可安全重写的 `~/.omo/omo.jsonc` 中的 `[codex].agents.<role>.reasoning`。模型固定保持不变，推理强度继承 Codex 的父级配置。
+
+只更改模型的保存会省略 `effort`，保留现有强度；继承会发送 `effort: null` 明确清除。镜像写入失败时，**重试 omo.jsonc** 会重新发送同一选择，即使角色列表重新加载尚未完成或失败，也会保留清除请求。应用 Auto-assign 中没有强度建议的提案（例如强度列表为空的模型）也会保留角色现有强度。`omo.jsonc` 不存在或包含注释时跳过镜像，角色 TOML 的保存仍然保留。

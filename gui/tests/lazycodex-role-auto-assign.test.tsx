@@ -12,6 +12,10 @@ let root: Root | null = null;
 let mountCount = 0;
 let apiBase = "";
 let requests: Array<{ method: string; url: string; body: unknown }> = [];
+let roleRows: Array<{ role: string; model: string | null; effort: string | null; omoJsoncModel: null }>;
+let omoWriteStatus = "written";
+let rolesHold: Promise<void> | null = null;
+let rolesFailure = false;
 
 const PROPOSALS = {
   sizingModel: "gpt-5.5",
@@ -43,21 +47,35 @@ beforeEach(() => {
   mountCount += 1;
   apiBase = `http://ocx-lazycodex-auto-${mountCount}.invalid`;
   requests = [];
+  omoWriteStatus = "written";
+  rolesHold = null;
+  rolesFailure = false;
+  roleRows = [
+    { role: "explorer", model: "gpt-5.5", effort: "high", omoJsoncModel: null },
+    { role: "vague", model: null, effort: null, omoJsoncModel: null },
+    { role: "worker", model: null, effort: null, omoJsoncModel: null },
+  ];
   const mockFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input instanceof Request ? input.url : input);
     const method = init?.method ?? "GET";
     if (method !== "GET") requests.push({ method, url, body: JSON.parse(String(init?.body)) });
     if (url.endsWith("/auto-assign")) return json(PROPOSALS);
-    if (method === "PUT") return json({ ok: true, toml: { status: "written" }, omoJsonc: { status: "written" } });
+    if (method === "PUT") {
+      const body = JSON.parse(String(init?.body));
+      const role = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1));
+      roleRows = roleRows.map(row => row.role === role ? {
+        ...row, model: body.model, effort: Object.hasOwn(body, "effort") ? body.effort : row.effort,
+      } : row);
+      return json({ ok: true, toml: { status: "written" }, omoJsonc: { status: omoWriteStatus } });
+    }
     if (url.endsWith("/api/subagent-models")) return json({ available: ["gpt-5.5", "a/small", "a/mid"] });
+    if (url.endsWith("/api/injection-model")) return json({ efforts: ["low", "high"] });
+    if (rolesFailure) return json({ error: "unavailable" }, 500);
+    if (rolesHold) await rolesHold;
     return json({
       lazycodex: { detected: true, pluginEnabled: true, pluginInstalled: true },
       omoJsonc: { state: "present" },
-      roles: [
-        { role: "explorer", model: "gpt-5.5", omoJsoncModel: null },
-        { role: "vague", model: null, omoJsoncModel: null },
-        { role: "worker", model: null, omoJsoncModel: null },
-      ],
+      roles: roleRows,
     });
   }) as typeof fetch;
   Object.defineProperty(globalThis, "fetch", { configurable: true, value: mockFetch });
@@ -138,6 +156,59 @@ test("apply all writes each remaining proposal once and skips unsized roles", as
   expect(container.textContent).toContain("Applied 2 of 2 proposals.");
   expect(button("Apply all").disabled).toBe(true);
 });
+
+test("applying an empty-ladder proposal omits effort and preserves the existing role pin", async () => {
+  roleRows = roleRows.map(row => row.role === "worker" ? { ...row, model: "gpt-5.5", effort: "high" } : row);
+  const previous = PROPOSALS.proposals[1]!;
+  PROPOSALS.proposals[1] = { ...previous, model: "gpt-5.5", effort: "high" };
+  try {
+    await mount();
+    await click(button("Auto-assign"));
+    expect(proposal("worker").textContent).toContain("a/mid");
+    const apply = [...proposal("worker").querySelectorAll("button")].find(node => node.textContent === "Apply")!;
+    await click(apply as HTMLButtonElement);
+    expect(requests.filter(request => request.method === "PUT")).toEqual([
+      { method: "PUT", url: `${apiBase}/api/codex-agent-roles/worker`, body: { model: "a/mid" } },
+    ]);
+    expect(roleRows.find(row => row.role === "worker")).toEqual({ role: "worker", model: "a/mid", effort: "high", omoJsoncModel: null });
+    expect(container.textContent).toContain("a/mid · high");
+  } finally {
+    PROPOSALS.proposals[1] = previous;
+  }
+});
+
+for (const reload of ["pending", "failed"] as const) {
+  test(`an empty-ladder proposal keeps the pinned effort on mirror retry after a ${reload} reload`, async () => {
+    roleRows = roleRows.map(row => row.role === "worker" ? { ...row, model: "gpt-5.5", effort: "high" } : row);
+    const previous = PROPOSALS.proposals[1]!;
+    PROPOSALS.proposals[1] = { ...previous, model: "gpt-5.5", effort: "high" };
+    let release = () => {};
+    try {
+      await mount();
+      await click(button("Auto-assign"));
+      omoWriteStatus = "write_failed";
+      if (reload === "pending") rolesHold = new Promise<void>(resolve => { release = resolve; });
+      else rolesFailure = true;
+      await click(button("Apply", proposal("worker")));
+      const effortPicker = container.querySelector('[aria-label="Reasoning effort (worker)"]')!;
+      expect(effortPicker.textContent).toContain("high");
+      expect(container.textContent).toContain("worker now runs on a/mid · high");
+      const retry = button("Retry omo.jsonc", effortPicker.closest("tr")!);
+      expect(retry.disabled).toBe(false);
+      omoWriteStatus = "written";
+      await click(retry);
+      expect(requests.filter(request => request.method === "PUT").map(request => request.body)).toEqual([
+        { model: "a/mid" }, { model: "a/mid" },
+      ]);
+      expect(roleRows.find(row => row.role === "worker")?.effort).toBe("high");
+    } finally {
+      rolesFailure = false;
+      await act(async () => { release(); });
+      await settle();
+      PROPOSALS.proposals[1] = previous;
+    }
+  });
+}
 
 test("a proposal that matches the role's current model and effort is shown as already set", async () => {
   PROPOSALS.proposals[0] = { ...PROPOSALS.proposals[0]!, model: "a/small", effort: "low" };

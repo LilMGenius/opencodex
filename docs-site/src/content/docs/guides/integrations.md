@@ -709,6 +709,14 @@ rewrites the role file's `model_reasoning_effort` line and writes `[codex].agent
 in omo.jsonc when LazyCodex has that level (`ultra` stays in the role file only, and an older
 `reasoning` is removed). A Save that changes only the model leaves both effort values as they were.
 
+Every role's reasoning-effort picker offers **Inherit**, including roles with an existing effort
+pin. Select it and press Save to remove the root `model_reasoning_effort` setting from that
+role's TOML and clear `[codex].agents.<role>.reasoning` in a safely writable omo.jsonc. The role
+then inherits its reasoning effort from Codex's parent configuration; its model pin stays in place.
+A model-only Save omits `effort` and preserves the existing effort; Inherit sends `effort: null`
+to clear it. If the role save succeeds but the mirror fails, **Retry omo.jsonc** repeats that
+same choice, including an explicit clear, even if reloading the roles is pending or fails.
+
 ### Auto-assign
 
 Auto-assign is part of omo (Codex / LazyCodex): it sits above the role table in that section and
@@ -732,7 +740,8 @@ it up or down. A role the model could not size clearly is shown as not sized, wi
 cannot be applied. Nothing is written until you press Apply on a row or Apply all. Applying uses the
 same save as picking by hand, and also rewrites the role's `model_reasoning_effort` when the file already has
 one. The effort is placed on the chosen model's own levels: its lowest, its default, one above the
-default, or its highest.
+default, or its highest. A proposal with no effort recommendation (for example, a model with an
+empty effort ladder) changes only the model and preserves the role's existing effort.
 
 ```bash
 ocx agent roles suggest

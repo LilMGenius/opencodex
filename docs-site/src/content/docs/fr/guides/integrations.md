@@ -316,3 +316,9 @@ ocx integration client enable --client kilo
 ## Factory Droid
 
 Factory Droid utilise `~/.factory/settings.json` (`%USERPROFILE%\.factory\settings.json` sous Windows). Activez explicitement l’intégration avec `ocx integration client enable --client droid`, puis choisissez un modèle personnalisé dans `/model`. Les entrées gérées n’utilisent pas de clé et fonctionnent uniquement en boucle locale. La désactivation supprime ces entrées ; l’annulation restaure les octets sauvegardés. Si l’ancien `config.json` contient des entrées OpenCodex ou si `settings.local.json` remplace `customModels`, résolvez ce conflit avant l’activation. Consultez la [documentation Factory BYOK](https://docs.factory.ai/model-independence/byok).
+
+## Effort de raisonnement des rôles omo (Codex / LazyCodex)
+
+Lorsque LazyCodex est détecté, l’onglet omo permet de modifier le modèle et l’effort de chaque rôle dans `$CODEX_HOME/agents/*.toml`. Tous les sélecteurs d’effort proposent **Hériter**, même si un effort est déjà fixé. Choisissez cette option et enregistrez pour supprimer le `model_reasoning_effort` à la racine du TOML du rôle et effacer `[codex].agents.<role>.reasoning` dans `~/.omo/omo.jsonc` lorsque sa réécriture est sûre. Le modèle reste fixé ; l’effort est hérité de la configuration parente de Codex.
+
+Un enregistrement qui ne change que le modèle omet `effort` et conserve l’effort existant. Hériter envoie `effort: null` pour l’effacer explicitement. Si l’écriture du miroir échoue, **Réessayer omo.jsonc** renvoie le même choix, y compris l’effacement, même si le rechargement des rôles est en attente ou échoue. Appliquer une proposition Auto-assign sans recommandation d’effort (par exemple pour un modèle dont la liste d’efforts est vide) conserve aussi l’effort du rôle. Si `omo.jsonc` est absent ou contient des commentaires, le miroir est ignoré ; l’enregistrement du TOML reste effectif.

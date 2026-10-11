@@ -354,3 +354,9 @@ ocx integration client enable --client kilo
 ## Factory Droid
 
 Factory Droid, `~/.factory/settings.json` dosyasını (Windows'ta `%USERPROFILE%\.factory\settings.json`) kullanır. `ocx integration client enable --client droid` komutuyla açıkça etkinleştirin, ardından `/model` içinde özel bir model seçin. Yönetilen satırlar anahtarsızdır ve yalnızca geri döngü bağlantısında çalışır. Devre dışı bırakma yönetilen satırları kaldırır; Undo kaydedilen baytları geri yükler. Eski `config.json` dosyasında OpenCodex satırları varsa veya `settings.local.json`, `customModels` değerini geçersiz kılıyorsa etkinleştirmeden önce çakışmayı giderin. [Factory BYOK belgelerine](https://docs.factory.ai/model-independence/byok) bakın.
+
+## omo (Codex / LazyCodex) rol akıl yürütme düzeyi
+
+LazyCodex algılandığında omo sekmesinde `$CODEX_HOME/agents/*.toml` içindeki her rolün modeli ve akıl yürütme düzeyi düzenlenebilir. Düzeyi sabitlenmiş roller dahil her düzey seçicisi **Devral** seçeneğini sunar. Bu seçeneği seçip kaydettiğinizde rol TOML dosyasının kökündeki `model_reasoning_effort` kaldırılır ve güvenle yeniden yazılabilen `~/.omo/omo.jsonc` içindeki `[codex].agents.<role>.reasoning` temizlenir. Model sabitlemesi korunur; düzey Codex’in üst yapılandırmasından devralınır.
+
+Yalnızca modeli değiştiren kayıt `effort` alanını göndermez ve mevcut düzeyi korur. Devral, açıkça temizlemek için `effort: null` gönderir. Yansıma yazımı başarısız olursa **omo.jsonc yeniden dene**, rollerin yeniden yüklenmesi beklemede olsa veya başarısız olsa bile temizleme dahil aynı seçimi tekrar gönderir. Düzey önerisi olmayan bir Auto-assign önerisini uygulamak da (örneğin düzey listesi boş bir model için) rolün mevcut düzeyini korur. `omo.jsonc` yoksa veya yorum içeriyorsa yansıma atlanır; rol TOML kaydı geçerli kalır.
