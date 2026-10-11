@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDataSurface } from "../../data-surface";
 import { readJsonOrThrow } from "../../fetch-json";
 import { useT, type TKey } from "../../i18n/shared";
@@ -16,6 +16,7 @@ type OmoFileState = "absent" | "comments" | "invalid" | "present";
 type OmoWriteStatus = "written" | "unchanged" | "absent" | "skipped_comments" | "invalid" | "write_failed";
 
 interface RoleModels {
+  writeVersion?: number;
   detected: boolean;
   roles: RoleRow[];
   omoJsonc: { state: OmoFileState } | null;
@@ -35,11 +36,13 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [effortDrafts, setEffortDrafts] = useState<Record<string, string>>({});
   const [mirrorRetries, setMirrorRetries] = useState<Record<string, { model: string; effort: string; sent: string | null | undefined }>>({});
-  const [acknowledged, setAcknowledged] = useState<Record<string, { source: RoleRow; model: string; effort: string }>>({});
+  const writeVersion = useRef(0);
+  const [acknowledged, setAcknowledged] = useState<Record<string, { apiBase: string; version: number; model: string; effort: string }>>({});
   const [pending, setPending] = useState<string | null>(null);
   const [result, setResult] = useState<{ tone: "ok" | "warn" | "err"; text: string } | null>(null);
 
   const load = useCallback(async (signal: AbortSignal): Promise<RoleModels> => {
+    const readVersion = writeVersion.current;
     const roles = await readJsonOrThrow<{ lazycodex?: { detected?: boolean }; roles?: RoleRow[]; omoJsonc?: { state: OmoFileState } | null }>(
       await fetch(`${apiBase}/api/codex-agent-roles`, { signal }),
       t("integrations.lazycodexRoles.loadFailed"),
@@ -55,6 +58,7 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
         .catch(() => null),
     ]);
     return {
+      writeVersion: readVersion,
       detected: true,
       roles: roles.roles ?? [],
       omoJsonc: roles.omoJsonc ?? null,
@@ -70,10 +74,12 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
   const data = resource.state.data;
 
   // A PUT acknowledges TOML before the follow-up GET settles. Keep its baseline
-  // only while rendering that same GET row; a fresh row supersedes the acknowledgement.
+  // until a GET started after that acknowledgement supersedes it. Older in-flight
+  // reads cannot replace a newer PUT merely by publishing during its request.
   const currentRow = (row: RoleRow): RoleRow => {
     const saved = acknowledged[row.role];
-    return saved?.source === row ? { ...row, model: saved.model, effort: saved.effort || null } : row;
+    return saved?.apiBase === apiBase && saved.version > (data?.writeVersion ?? 0)
+      ? { ...row, model: saved.model, effort: saved.effort || null } : row;
   };
 
   const save = async (
@@ -98,8 +104,8 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
         response,
         t("integrations.lazycodexRoles.saveFailed", { role }),
       );
-      const source = data?.roles.find(row => row.role === role);
-      if (source) setAcknowledged(current => ({ ...current, [role]: { source, model, effort: displayedEffort } }));
+      const version = ++writeVersion.current;
+      setAcknowledged(current => ({ ...current, [role]: { apiBase, version, model, effort: displayedEffort } }));
       const omoStatus = payload?.omoJsonc?.status;
       const notice = omoStatus ? OMO_WRITE_NOTICE[omoStatus] : undefined;
       const picked = displayedEffort ? `${model} · ${displayedEffort}` : model;

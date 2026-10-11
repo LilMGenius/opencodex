@@ -19,6 +19,8 @@ let rolesFailure: { status: number; body: unknown } | null = null;
 let rolesBody: unknown;
 let effortsFailure = false;
 let rolesHold: Promise<void> | null = null;
+let modelsHold: Promise<void> | null = null;
+let putHold: Promise<void> | null = null;
 let fetched: string[] = [];
 
 function json(body: unknown, status = 200): Response {
@@ -46,6 +48,8 @@ beforeEach(() => {
   rolesFailure = null;
   effortsFailure = false;
   rolesHold = null;
+  modelsHold = null;
+  putHold = null;
   rolesBody = {
     lazycodex: { detected: true, pluginEnabled: true, pluginInstalled: true },
     omoJsonc: { state: "present" },
@@ -68,6 +72,7 @@ beforeEach(() => {
           return json({ error: "invalid effort", code: "invalid_effort" }, 400);
         }
       }
+      if (putHold) await putHold;
       const role = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1));
       const current = rolesBody as { roles: Array<{ role: string; model: string | null; effort?: string | null }> };
       rolesBody = {
@@ -78,7 +83,10 @@ beforeEach(() => {
       };
       return json({ ok: true, toml: { status: "written" }, omoJsonc: { status: omoWriteStatus } });
     }
-    if (url.endsWith("/api/subagent-models")) return json({ available: ["gpt-5.5", "xai/grok-4.5"] });
+    if (url.endsWith("/api/subagent-models")) {
+      if (modelsHold) await modelsHold;
+      return json({ available: ["gpt-5.5", "xai/grok-4.5"] });
+    }
     if (url.endsWith("/api/injection-model")) {
       return effortsFailure ? json({ error: "unavailable" }, 503) : json({ efforts: ["low", "medium", "high"] });
     }
@@ -345,6 +353,40 @@ for (const reload of ["pending", "failed"] as const) {
       await settle();
     });
   }
+}
+
+for (const changeModel of [false, true]) {
+  test(`a GET published during PUT cannot supersede that acknowledged save (model change: ${changeModel})`, async () => {
+    pinExplorerEffort("low");
+    await mount();
+    let releaseModels = () => {};
+    modelsHold = new Promise<void>(resolve => { releaseModels = resolve; });
+    await saveEffortWithFailedMirror();
+    let releasePut = () => {};
+    putHold = new Promise<void>(resolve => { releasePut = resolve; });
+    await pick("explorer", "low", "Reasoning effort (explorer)");
+    await act(async () => { saveButton("explorer").click(); });
+    await act(async () => { releaseModels(); });
+    await settle();
+    modelsHold = null;
+    rolesFailure = { status: 500, body: { error: "unavailable" } };
+    await act(async () => { releasePut(); });
+    await settle();
+    putHold = null;
+    expect((rolesBody as { roles: Array<{ effort: string | null }> }).roles[0].effort).toBe("low");
+    expect(container.textContent).toContain("gpt-5.5 · low");
+    await pick("explorer", "high", "Reasoning effort (explorer)");
+    if (changeModel) await pick("explorer", "xai/grok-4.5");
+    expect(saveButton("explorer").disabled).toBe(false);
+    await act(async () => { saveButton("explorer").click(); });
+    await settle();
+    expect(puts.map(entry => entry.body)).toEqual([
+      { model: "gpt-5.5", effort: "high" },
+      { model: "gpt-5.5", effort: "low" },
+      { model: changeModel ? "xai/grok-4.5" : "gpt-5.5", effort: "high" },
+    ]);
+    expect((rolesBody as { roles: Array<{ effort: string | null }> }).roles[0].effort).toBe("high");
+  });
 }
 
 test("a model-only save keeps an unchanged effort out of the PUT, even one the server would refuse", async () => {
