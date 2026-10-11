@@ -6,6 +6,7 @@ import {
   AgentRoleModelError,
   listCodexAgentRoleModels,
   readCodexAgentRoleEffort,
+  removeTomlRootReasoningEffort,
   setTomlRootModel,
   setTomlRootReasoningEffort,
   writeCodexAgentRoleModel,
@@ -90,6 +91,25 @@ describe("setTomlRootReasoningEffort", () => {
     const next = setTomlRootReasoningEffort(crlf, "low");
     expect(next).toBe(crlf.replace("'high' # tuned", "'low' # tuned"));
     expect(setTomlRootReasoningEffort(next, "low")).toBe(next);
+  });
+});
+
+describe("removeTomlRootReasoningEffort", () => {
+  test("keeps a leading BOM and CRLF when the effort is the first key", () => {
+    const before = '\ufeffmodel_reasoning_effort = "high" # tuned\r\nmodel = "m"\r\n';
+    expect(removeTomlRootReasoningEffort(before)).toBe('\ufeffmodel = "m"\r\n');
+  });
+
+  test("refuses a multiline value instead of leaving its continuation as broken TOML", () => {
+    const before = 'model_reasoning_effort = """\nhigh"""\nmodel = "m"\n';
+    expect(() => removeTomlRootReasoningEffort(before)).toThrow(AgentRoleModelError);
+  });
+
+  test("keeps effort-shaped prose and table-local keys when removing the root override", () => {
+    const before = 'developer_instructions = """\nmodel_reasoning_effort = "low"\n"""\nmodel_reasoning_effort = "high"\n[profile]\nmodel_reasoning_effort = "medium"\n';
+    const after = removeTomlRootReasoningEffort(before);
+    expect(after).toBe(before.replace('model_reasoning_effort = "high"\n', ""));
+    expect(removeTomlRootReasoningEffort(after)).toBe(after);
   });
 });
 

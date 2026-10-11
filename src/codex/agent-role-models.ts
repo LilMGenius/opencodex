@@ -100,9 +100,13 @@ export function setTomlRootReasoningEffort(content: string, effort: string): str
 export function removeTomlRootReasoningEffort(content: string): string {
   const location = locateTomlReasoningEffortKey(content);
   if (!location?.inRootTable) return content;
+  if (!location.span) {
+    throw new AgentRoleModelError("unsupported_model_value", "the existing model_reasoning_effort value is not a one-line string");
+  }
   const lines = content.split("\n");
   lines.splice(location.line, 1);
-  return lines.join("\n");
+  const after = lines.join("\n");
+  return location.line === 0 && content.startsWith("\ufeff") ? `\ufeff${after}` : after;
 }
 
 export function readCodexAgentRoleEffort(role: string, codexHome: string): string | null {

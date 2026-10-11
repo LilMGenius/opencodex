@@ -344,6 +344,8 @@ catalog path calls it, and opencodex never creates, repairs, or removes a role f
 - `effort` is optional: omitted keeps the role's `model_reasoning_effort`, a level rewrites it, and
   JSON `null` removes the root line, clearing the role-level override; the effective effort then
   follows Codex's own resolution (spawn value, `[agents]` default, parent) rather than a fixed model default.
+  Clearing preserves the leading BOM and remaining line endings; a multiline effort value is
+  refused by the same one-line-string restriction as setting an effort, leaving the file unchanged.
 - The same pick is mirrored into LazyCodex's `[codex].agents.<role>` as `model` and, for an effort LazyCodex can express, `reasoning`; that half belongs to
   [client integrations](clients/integrations.md#omo-codex-lazycodex-role-models). The role file is written first
   and stands even when the mirror is skipped.
