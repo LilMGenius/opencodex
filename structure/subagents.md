@@ -344,10 +344,8 @@ catalog path calls it, and opencodex never creates, repairs, or removes a role f
 - The same pick is mirrored into LazyCodex's `[codex].agents.<role>` as `model` and, for an effort LazyCodex can express, `reasoning`; that half belongs to
   [client integrations](clients/integrations.md#omo-codex-lazycodex-role-models). The role file is written first
   and stands even when the mirror is skipped.
-- Omitted `effort` preserves the role's current effort. An explicit string sets the root
-  `model_reasoning_effort`; explicit `null` removes that root key and clears the mirror's
-  `reasoning`, restoring inheritance. The dashboard's Inherit option sends this clear even
-  for a pinned row, and its mirror retry preserves omission versus clear across failed reloads.
+- The dashboard's Inherit option clears the role-level effort override even for a pinned row.
+  Its mirror retry preserves omission versus explicit clear across pending or failed reloads.
 
 Sibling instances refuse the write, because it reaches the shared `CODEX_HOME`.
 
