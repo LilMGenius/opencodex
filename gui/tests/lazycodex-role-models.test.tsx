@@ -316,11 +316,36 @@ test("retrying a failed mirror after a failed reload resends the saved effort", 
   await mount();
   rolesFailure = { status: 500, body: { error: "unavailable" } };
   await saveEffortWithFailedMirror();
-  expect(container.textContent).toContain("gpt-5.5 · low");
+  expect(container.textContent).toContain("gpt-5.5 · high");
   await act(async () => { saveButton("explorer").click(); });
   await settle();
   expect(puts.map(entry => entry.body)).toEqual([{ model: "gpt-5.5", effort: "high" }, { model: "gpt-5.5", effort: "high" }]);
 });
+
+for (const reload of ["pending", "failed"] as const) {
+  for (const changeModel of [false, true]) {
+    test(`editing acknowledged effort after ${reload} reload preserves intent (model change: ${changeModel})`, async () => {
+      pinExplorerEffort("low");
+      await mount();
+      let release = () => {};
+      if (reload === "pending") rolesHold = new Promise<void>(resolve => { release = resolve; });
+      else rolesFailure = { status: 500, body: { error: "unavailable" } };
+      await saveEffortWithFailedMirror();
+      await pick("explorer", "low", "Reasoning effort (explorer)");
+      if (changeModel) await pick("explorer", "xai/grok-4.5");
+      expect(saveButton("explorer").disabled).toBe(false);
+      await act(async () => { saveButton("explorer").click(); });
+      await settle();
+      expect(puts.map(entry => entry.body)).toEqual([
+        { model: "gpt-5.5", effort: "high" },
+        { model: changeModel ? "xai/grok-4.5" : "gpt-5.5", effort: "low" },
+      ]);
+      expect((rolesBody as { roles: Array<{ effort: string | null }> }).roles[0].effort).toBe("low");
+      await act(async () => { release(); });
+      await settle();
+    });
+  }
+}
 
 test("a model-only save keeps an unchanged effort out of the PUT, even one the server would refuse", async () => {
   pinExplorerEffort("future-provider-effort");

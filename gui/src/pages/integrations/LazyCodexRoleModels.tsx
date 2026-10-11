@@ -35,6 +35,7 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [effortDrafts, setEffortDrafts] = useState<Record<string, string>>({});
   const [mirrorRetries, setMirrorRetries] = useState<Record<string, { model: string; effort: string; sent: string | null | undefined }>>({});
+  const [acknowledged, setAcknowledged] = useState<Record<string, { source: RoleRow; model: string; effort: string }>>({});
   const [pending, setPending] = useState<string | null>(null);
   const [result, setResult] = useState<{ tone: "ok" | "warn" | "err"; text: string } | null>(null);
 
@@ -68,11 +69,21 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
   });
   const data = resource.state.data;
 
+  // A PUT acknowledges TOML before the follow-up GET settles. Keep its baseline
+  // only while rendering that same GET row; a fresh row supersedes the acknowledgement.
+  const currentRow = (row: RoleRow): RoleRow => {
+    const saved = acknowledged[row.role];
+    return saved?.source === row ? { ...row, model: saved.model, effort: saved.effort || null } : row;
+  };
+
   const save = async (
     role: string,
     model: string,
     effort: string | null | undefined = undefined,
-    displayedEffort = effort === undefined ? data?.roles.find(row => row.role === role)?.effort ?? "" : effort ?? "",
+    displayedEffort = effort === undefined ? (() => {
+      const row = data?.roles.find(row => row.role === role);
+      return row ? currentRow(row).effort ?? "" : "";
+    })() : effort ?? "",
   ): Promise<boolean> => {
     if (pending !== null) return false;
     setPending(role);
@@ -87,6 +98,8 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
         response,
         t("integrations.lazycodexRoles.saveFailed", { role }),
       );
+      const source = data?.roles.find(row => row.role === role);
+      if (source) setAcknowledged(current => ({ ...current, [role]: { source, model, effort: displayedEffort } }));
       const omoStatus = payload?.omoJsonc?.status;
       const notice = omoStatus ? OMO_WRITE_NOTICE[omoStatus] : undefined;
       const picked = displayedEffort ? `${model} · ${displayedEffort}` : model;
@@ -152,7 +165,8 @@ export default function LazyCodexRoleModels({ apiBase, active }: { apiBase: stri
               </tr>
             </thead>
             <tbody>
-              {data.roles.map(row => {
+              {data.roles.map(source => {
+                const row = currentRow(source);
                 const draft = drafts[row.role] ?? row.model ?? "";
                 const effortDraft = effortDrafts[row.role] ?? row.effort ?? "";
                 const changed = draft !== "" && (draft !== row.model || effortDraft !== (row.effort ?? ""));

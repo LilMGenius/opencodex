@@ -503,7 +503,7 @@ mirrors a dashboard or `ocx agent roles set` pick into `[codex].agents.<role>.mo
 resolves it: `HOME`, then `USERPROFILE`, then the OS home. This write has no ownership record,
 snapshot, or journal. It changes the role's `model` and, when the request carries an effort, its `reasoning` (Codex `none` becomes `off`; a level LazyCodex lacks, such as `ultra`, removes a stale `reasoning`; an effort of JSON `null` removes `reasoning` along with the role file's `model_reasoning_effort`; a model-only save keeps it), and leaves every other key as it
 was, re-serialized with the file's indentation, line endings, and BOM.
-`gui/src/pages/integrations/LazyCodexRoleModels.tsx` offers Inherit even on pinned rows: model-only saves omit `effort`, Inherit sends `effort: null`, and mirror retries preserve the distinction through pending or failed reloads.
+`gui/src/pages/integrations/LazyCodexRoleModels.tsx` offers Inherit even on pinned rows: model-only saves omit `effort`, Inherit sends `effort: null`, and mirror retries preserve the distinction through pending or failed reloads. Subsequent edits compare against the last acknowledged PUT until a fresh GET supersedes it.
 
 It never creates the file and never writes one it would damage: a missing file reports
 `absent`, a document that is not an object or whose `[codex]`, `[codex].agents`, or role entry is
