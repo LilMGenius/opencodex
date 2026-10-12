@@ -2361,7 +2361,7 @@ export const pt: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} agora usa {model}.",
   "integrations.lazycodexRoles.omoAbsent": "{role} agora usa {model}. O omo.jsonc não foi encontrado, então só o arquivo da função foi alterado.",
   "integrations.lazycodexRoles.omoComments": "{role} agora usa {model}. O omo.jsonc tem comentários que salvar removeria, então ficou como estava; defina [codex].agents.{role} nele você mesmo.",
-  "integrations.lazycodexRoles.omoInvalid": "{role} agora usa {model}. O omo.jsonc ficou como estava porque seu [codex].agents não é um objeto JSON.",
+  "integrations.lazycodexRoles.omoInvalid": "{role} agora usa {model}. O omo.jsonc ficou como estava porque não é um JSON válido no formato que o LazyCodex lê.",
   "integrations.lazycodexRoles.omoFailed": "{role} agora usa {model}, mas não foi possível gravar o omo.jsonc.",
   "integrations.lazycodexRoles.retryMirror": "Tentar omo.jsonc novamente",
   "integrations.lazycodexRoles.omoCommentsState": "O omo.jsonc tem comentários, então salvar aqui atualiza só os arquivos de papel. Defina [codex].agents no omo.jsonc você mesmo.",

@@ -3227,7 +3227,7 @@ export const zhTW: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} 現在使用 {model}。",
   "integrations.lazycodexRoles.omoAbsent": "{role} 現在使用 {model}。找不到 omo.jsonc，因此只修改了角色檔案。",
   "integrations.lazycodexRoles.omoComments": "{role} 現在使用 {model} 執行。omo.jsonc 中有儲存後會遺失的註解，因此未修改；請自行設定其中的 [codex].agents.{role}。",
-  "integrations.lazycodexRoles.omoInvalid": "{role} 現在使用 {model} 執行。omo.jsonc 的 [codex].agents 不是 JSON 物件，因此未修改該檔案。",
+  "integrations.lazycodexRoles.omoInvalid": "{role} 現在使用 {model} 執行。omo.jsonc 不是 LazyCodex 可讀取格式的有效 JSON，因此未修改。",
   "integrations.lazycodexRoles.omoFailed": "{role} 現在使用 {model} 執行，但無法寫入 omo.jsonc。",
   "integrations.lazycodexRoles.retryMirror": "重試 omo.jsonc",
   "integrations.lazycodexRoles.omoCommentsState": "omo.jsonc 中有註解，因此在這裡儲存只會更新角色檔案。請自行設定 omo.jsonc 中的 [codex].agents。",

@@ -2315,7 +2315,7 @@ export const fr: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} utilise désormais {model}.",
   "integrations.lazycodexRoles.omoAbsent": "{role} utilise désormais {model}. omo.jsonc est introuvable, seul le fichier du rôle a donc été modifié.",
   "integrations.lazycodexRoles.omoComments": "{role} utilise désormais {model}. omo.jsonc contient des commentaires qu'un enregistrement supprimerait ; il n'a pas été modifié, définissez [codex].agents.{role} vous-même.",
-  "integrations.lazycodexRoles.omoInvalid": "{role} utilise désormais {model}. omo.jsonc n'a pas été modifié car son [codex].agents n'est pas un objet JSON.",
+  "integrations.lazycodexRoles.omoInvalid": "{role} utilise désormais {model}. omo.jsonc n'a pas été modifié, car ce n'est pas un JSON valide de la forme que LazyCodex lit.",
   "integrations.lazycodexRoles.omoFailed": "{role} utilise désormais {model}, mais omo.jsonc n'a pas pu être écrit.",
   "integrations.lazycodexRoles.retryMirror": "Réessayer omo.jsonc",
   "integrations.lazycodexRoles.omoCommentsState": "omo.jsonc contient des commentaires : enregistrer ici ne met à jour que les fichiers de rôle. Définissez [codex].agents dans omo.jsonc vous-même.",

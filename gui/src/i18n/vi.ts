@@ -2336,7 +2336,7 @@ export const vi: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} giờ chạy trên {model}.",
   "integrations.lazycodexRoles.omoAbsent": "{role} giờ chạy trên {model}. Không tìm thấy omo.jsonc nên chỉ tệp vai trò được thay đổi.",
   "integrations.lazycodexRoles.omoComments": "{role} giờ chạy bằng {model}. omo.jsonc có chú thích sẽ bị xóa khi lưu nên được giữ nguyên; hãy tự đặt [codex].agents.{role} trong đó.",
-  "integrations.lazycodexRoles.omoInvalid": "{role} giờ chạy bằng {model}. omo.jsonc được giữ nguyên vì [codex].agents trong đó không phải đối tượng JSON.",
+  "integrations.lazycodexRoles.omoInvalid": "{role} giờ chạy bằng {model}. omo.jsonc được giữ nguyên vì nó không phải JSON hợp lệ theo dạng LazyCodex đọc.",
   "integrations.lazycodexRoles.omoFailed": "{role} giờ chạy bằng {model}, nhưng không ghi được omo.jsonc.",
   "integrations.lazycodexRoles.retryMirror": "Thử lại omo.jsonc",
   "integrations.lazycodexRoles.omoCommentsState": "omo.jsonc có chú thích, nên lưu ở đây chỉ cập nhật các tệp vai trò. Hãy tự đặt [codex].agents trong omo.jsonc.",

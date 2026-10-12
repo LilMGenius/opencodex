@@ -1794,7 +1794,7 @@ export const zh: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} 现在使用 {model}。",
   "integrations.lazycodexRoles.omoAbsent": "{role} 现在使用 {model}。未找到 omo.jsonc，因此只修改了角色文件。",
   "integrations.lazycodexRoles.omoComments": "{role} 现在使用 {model} 运行。omo.jsonc 中有保存后会丢失的注释，因此未修改；请自行设置其中的 [codex].agents.{role}。",
-  "integrations.lazycodexRoles.omoInvalid": "{role} 现在使用 {model} 运行。omo.jsonc 的 [codex].agents 不是 JSON 对象，因此未修改该文件。",
+  "integrations.lazycodexRoles.omoInvalid": "{role} 现在使用 {model} 运行。omo.jsonc 不是 LazyCodex 可读取格式的有效 JSON，因此未修改。",
   "integrations.lazycodexRoles.omoFailed": "{role} 现在使用 {model} 运行，但无法写入 omo.jsonc。",
   "integrations.lazycodexRoles.retryMirror": "重试 omo.jsonc",
   "integrations.lazycodexRoles.omoCommentsState": "omo.jsonc 中有注释，因此在这里保存只会更新角色文件。请自行设置 omo.jsonc 中的 [codex].agents。",

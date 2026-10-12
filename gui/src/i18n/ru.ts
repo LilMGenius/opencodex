@@ -2301,7 +2301,7 @@ export const ru: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} теперь работает на {model}.",
   "integrations.lazycodexRoles.omoAbsent": "{role} теперь работает на {model}. Файл omo.jsonc не найден, поэтому изменён только файл роли.",
   "integrations.lazycodexRoles.omoComments": "{role} теперь работает на {model}. В omo.jsonc есть комментарии, которые сохранение удалило бы, поэтому файл не изменён; задайте [codex].agents.{role} в нём сами.",
-  "integrations.lazycodexRoles.omoInvalid": "{role} теперь работает на {model}. omo.jsonc не изменён: [codex].agents в нём не является JSON-объектом.",
+  "integrations.lazycodexRoles.omoInvalid": "{role} теперь работает на {model}. omo.jsonc не изменён: это не корректный JSON той структуры, которую читает LazyCodex.",
   "integrations.lazycodexRoles.omoFailed": "{role} теперь работает на {model}, но записать omo.jsonc не удалось.",
   "integrations.lazycodexRoles.retryMirror": "Повторить запись omo.jsonc",
   "integrations.lazycodexRoles.omoCommentsState": "В omo.jsonc есть комментарии, поэтому сохранение здесь обновляет только файлы ролей. Задайте [codex].agents в omo.jsonc сами.",

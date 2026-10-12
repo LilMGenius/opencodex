@@ -2210,7 +2210,7 @@ export const ja: Record<TKey, string> = {
   "integrations.lazycodexRoles.saved": "{role} は {model} で動作します。",
   "integrations.lazycodexRoles.omoAbsent": "{role} は {model} で動作します。omo.jsonc が見つからないため、ロールファイルだけを変更しました。",
   "integrations.lazycodexRoles.omoComments": "{role} は {model} で動くようになりました。omo.jsonc には保存で消えるコメントがあるため変更していません。[codex].agents.{role} はご自身で設定してください。",
-  "integrations.lazycodexRoles.omoInvalid": "{role} は {model} で動くようになりました。omo.jsonc の [codex].agents が JSON オブジェクトではないため、そのファイルは変更していません。",
+  "integrations.lazycodexRoles.omoInvalid": "{role} は {model} で動くようになりました。omo.jsonc は LazyCodex が読む形の有効な JSON ではないため変更していません。",
   "integrations.lazycodexRoles.omoFailed": "{role} は {model} で動くようになりましたが、omo.jsonc は書き込めませんでした。",
   "integrations.lazycodexRoles.retryMirror": "omo.jsonc を再試行",
   "integrations.lazycodexRoles.omoCommentsState": "omo.jsonc にコメントがあるため、ここで保存するとロールファイルだけが更新されます。omo.jsonc の [codex].agents はご自身で設定してください。",
