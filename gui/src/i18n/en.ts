@@ -2372,7 +2372,7 @@ export const en = {
   "integrations.semantics.raycast": "Adds an OpenCodex provider entry to Raycast's providers.yaml so every routed model appears in the Raycast AI model picker. Raycast Pro required.",
   "integrations.semantics.omo": "Manages only providers.opencodex in omo's models.json — ~/.omo/agent unless OMO_CODING_AGENT_DIR, SENPI_CODING_AGENT_DIR or PI_CODING_AGENT_DIR redirects it. Your other providers stay unchanged. Applies to new sessions.",
   "integrations.lazycodexRoles.title": "omo (Codex / LazyCodex) role models",
-  "integrations.lazycodexRoles.hint": "Pick the model and effort each role runs on. Saving updates its file under $CODEX_HOME/agents and LazyCodex's omo.jsonc; Inherit effort leaves the effort to Codex.",
+  "integrations.lazycodexRoles.hint": "Pick the model and effort each role runs on. Saving updates its file under $CODEX_HOME/agents, and LazyCodex's omo.jsonc when it can be safely rewritten; Inherit effort leaves the effort to Codex.",
   "integrations.lazycodexRoles.role": "Role",
   "integrations.lazycodexRoles.current": "Current",
   "integrations.lazycodexRoles.model": "New model",

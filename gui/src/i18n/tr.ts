@@ -2311,7 +2311,7 @@ export const tr: Record<TKey, string> = {
   "integrations.semantics.raycast": "Raycast'in providers.yaml dosyasına bir OpenCodex sağlayıcı girdisi ekler; böylece yönlendirilen her model Raycast AI model seçicisinde görünür. Raycast Pro gerekir.",
   "integrations.semantics.omo": "Yalnızca omo'nun models.json dosyasındaki providers.opencodex girdisini yönetir — OMO_CODING_AGENT_DIR, SENPI_CODING_AGENT_DIR veya PI_CODING_AGENT_DIR yönlendirmediği sürece ~/.omo/agent. Diğer sağlayıcılarınız değişmeden kalır. Yeni oturumlardan itibaren geçerlidir.",
   "integrations.lazycodexRoles.title": "omo (Codex / LazyCodex) rol modelleri",
-  "integrations.lazycodexRoles.hint": "Her rolün modelini ve akıl yürütme çabasını seçin. Kaydetmek rolün $CODEX_HOME/agents altındaki dosyasını ve LazyCodex'in omo.jsonc dosyasını günceller; \"Çabayı devral\" çabayı Codex'e bırakır.",
+  "integrations.lazycodexRoles.hint": "Her rolün modelini ve akıl yürütme çabasını seçin. Kaydetmek rolün $CODEX_HOME/agents altındaki dosyasını ve güvenle yeniden yazılabiliyorsa LazyCodex'in omo.jsonc dosyasını günceller; \"Çabayı devral\" çabayı Codex'e bırakır.",
   "integrations.lazycodexRoles.role": "Rol",
   "integrations.lazycodexRoles.current": "Şu an",
   "integrations.lazycodexRoles.model": "Yeni model",

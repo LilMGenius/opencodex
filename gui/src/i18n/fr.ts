@@ -2299,7 +2299,7 @@ export const fr: Record<TKey, string> = {
   "integrations.semantics.raycast": "Ajoute une entrée de fournisseur OpenCodex dans le providers.yaml de Raycast afin que chaque modèle routé apparaisse dans le sélecteur de modèles de Raycast AI. Raycast Pro requis.",
   "integrations.semantics.omo": "Gère uniquement providers.opencodex dans le models.json d'omo — ~/.omo/agent, sauf redirection par OMO_CODING_AGENT_DIR, SENPI_CODING_AGENT_DIR ou PI_CODING_AGENT_DIR. Vos autres fournisseurs restent inchangés. S'applique aux nouvelles sessions.",
   "integrations.lazycodexRoles.title": "omo (Codex / LazyCodex) : modèles par rôle",
-  "integrations.lazycodexRoles.hint": "Choisissez le modèle et l'effort de raisonnement de chaque rôle. Enregistrer met à jour son fichier dans $CODEX_HOME/agents et le omo.jsonc de LazyCodex ; « Hériter de l’effort » laisse Codex choisir l'effort.",
+  "integrations.lazycodexRoles.hint": "Choisissez le modèle et l'effort de raisonnement de chaque rôle. Enregistrer met à jour son fichier dans $CODEX_HOME/agents et, s'il peut être réécrit sans risque, le omo.jsonc de LazyCodex ; « Hériter de l’effort » laisse Codex choisir l'effort.",
   "integrations.lazycodexRoles.role": "Rôle",
   "integrations.lazycodexRoles.current": "Actuel",
   "integrations.lazycodexRoles.model": "Nouveau modèle",
